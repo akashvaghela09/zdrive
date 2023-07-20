@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import S3 from "aws-sdk/clients/s3";
-import { createClient } from '@supabase/supabase-js'
+import { supabase} from '../supabase-config';
+import { bucketName, s3 } from '../storJ-config';
+
 
 const Upload = () => {
 
@@ -10,37 +11,6 @@ const Upload = () => {
     const [fileName, setFileName] = useState("");
     const [fileType, setFileType] = useState("");
     const [fileSize, setFileSize] = useState(0);
-
-    const {
-        REACT_APP_ACCESS_KEY_ID,
-        REACT_APP_SECRET_ACCESS_KEY,
-        REACT_APP_BASE_URL,
-        REACT_APP_SUPABASE_KEY
-    } = process.env;
-
-    // Storj
-    const accessKeyId = REACT_APP_ACCESS_KEY_ID;
-    const secretAccessKey = REACT_APP_SECRET_ACCESS_KEY;
-    const endpoint = "https://gateway.storjshare.io";
-    const bucketName = "anon-upload";
-
-    // Supabase
-    const supabaseUrl = REACT_APP_BASE_URL;
-    const supabaseKey = REACT_APP_SUPABASE_KEY;
-
-    // Create a new instance of S3
-    const s3 = new S3({
-        accessKeyId,
-        secretAccessKey,
-        endpoint,
-        s3ForcePathStyle: true,
-        signatureVersion: "v4",
-        connectTimeout: 0,
-        httpOptions: { timeout: 0 },
-    });
-
-    // Create a new instance of Supabase
-    const supabase = createClient(supabaseUrl, supabaseKey)
 
     const handleFileChange = (e) => {
         let rawFile = e.target.files[0];
@@ -67,24 +37,22 @@ const Upload = () => {
             console.log("Successfully uploaded file");
 
             const { data, error } = await supabase
-            .from('anon-files')
-            .insert([
-                {
-                    name: fileName,
-                    size: fileSize,
-                    type: fileType,
-                    s3_key: fileId,
-                },
-            ])
-            .select()
+                .from('anon-files')
+                .insert([
+                    {
+                        name: fileName,
+                        size: fileSize,
+                        type: fileType,
+                        s3_key: fileId,
+                    },
+                ])
+                .select()
 
-        console.log(data, error)
+            console.log(data, error)
         } catch (err) {
             console.error(err);
         }
     }
-
-    const handleDownload = (e) => { }
 
     const handleDelete = (e) => { }
 
@@ -114,15 +82,14 @@ const Upload = () => {
         <div>
             <h1>Upload Page</h1>
 
-            <div>
+            <div className='upload_wrapper'>
                 <input type="file" onChange={(e) => handleFileChange(e)} />
                 <button onClick={() => handleUpload()}>Upload</button>
             </div>
-            <div className='button_container'>
-                <button className='green' onClick={() => handleDownload()}>Download</button>
+            {/* <div className='button_container'>
                 <button className='red' onClick={() => handleDelete()}>Delete</button>
                 <button className='gray' onClick={() => handleLog()}>Log Data</button>
-            </div>
+            </div> */}
         </div>
     )
 }
